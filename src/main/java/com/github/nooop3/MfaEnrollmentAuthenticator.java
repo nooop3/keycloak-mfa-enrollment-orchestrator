@@ -6,16 +6,12 @@ import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.models.AuthenticationExecutionModel;
 import org.keycloak.models.AuthenticatorConfigModel;
 import org.keycloak.models.ClientModel;
-import org.keycloak.models.Constants;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
-import org.keycloak.models.RoleModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.credential.CredentialModel;
 import org.keycloak.models.credential.WebAuthnCredentialModel;
 import org.keycloak.models.SubjectCredentialManager;
-import org.keycloak.services.managers.AuthenticationManager;
-
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import java.time.Duration;
@@ -36,7 +32,8 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
     private static final String ATTR_LAST_PROMPT = "mfaEnrollment.lastPrompt";
     private static final String ATTR_FIRST_LOGIN_COMPLETED = "mfa.firstLoginCompleted";
     private static final int DEFAULT_MIN_REQUIRED = 1;
-    private static final List<String> DEFAULT_ENABLED_TYPES = List.of("totp", "webauthn", "webauthn_passwordless", "recovery_codes");
+    private static final List<String> DEFAULT_ENABLED_TYPES = List.of("totp", "webauthn", "webauthn_passwordless",
+            "recovery_codes");
 
     @Override
     public void authenticate(AuthenticationFlowContext context) {
@@ -99,7 +96,8 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         }
 
         if (!meetsMinimum && availableUnconfigured.isEmpty()) {
-            Response response = renderError(context, "No available MFA methods to configure. Contact your administrator.");
+            Response response = renderError(context,
+                    "No available MFA methods to configure. Contact your administrator.");
             if (config.failIfSelectionInsufficient) {
                 context.failureChallenge(AuthenticationFlowError.INTERNAL_ERROR, response);
             } else {
@@ -132,9 +130,11 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         List<String> requestedMethods = Optional.ofNullable(formData.get("method")).orElse(List.of());
         boolean optOutRequested = "on".equalsIgnoreCase(formData.getFirst("optOut"));
 
-        ValidationResult validation = validateSelection(config, enabledMethods, configuredMethods, requestedMethods, meetsMinimum);
+        ValidationResult validation = validateSelection(config, enabledMethods, configuredMethods, requestedMethods,
+                meetsMinimum);
         if (!validation.valid && config.failIfSelectionInsufficient) {
-            Response challenge = renderForm(context, config, enabledMethods, configuredMethods, validation.message, meetsMinimum);
+            Response challenge = renderForm(context, config, enabledMethods, configuredMethods, validation.message,
+                    meetsMinimum);
             context.failureChallenge(AuthenticationFlowError.INVALID_USER, challenge);
             return;
         }
@@ -145,7 +145,8 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
             return;
         }
 
-        boolean pushActionsToNextLogin = config.postAuthPromptMode == PostAuthPromptMode.NEXT_LOGIN_REQUIRED_ACTION && meetsMinimum;
+        boolean pushActionsToNextLogin = config.postAuthPromptMode == PostAuthPromptMode.NEXT_LOGIN_REQUIRED_ACTION
+                && meetsMinimum;
         for (String methodId : validation.acceptedMethods) {
             enabledMethods.stream()
                     .filter(m -> m.id().equals(methodId))
@@ -186,10 +187,12 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
             return true;
         }
         ClientModel client = context.getAuthenticationSession().getClient();
-        if (!config.onlyForClients.isEmpty() && !config.onlyForClients.contains(client.getClientId()) && !config.onlyForClients.contains(client.getId())) {
+        if (!config.onlyForClients.isEmpty() && !config.onlyForClients.contains(client.getClientId())
+                && !config.onlyForClients.contains(client.getId())) {
             return true;
         }
-        if (!config.excludeClients.isEmpty() && (config.excludeClients.contains(client.getClientId()) || config.excludeClients.contains(client.getId()))) {
+        if (!config.excludeClients.isEmpty() && (config.excludeClients.contains(client.getClientId())
+                || config.excludeClients.contains(client.getId()))) {
             return true;
         }
 
@@ -354,20 +357,27 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
 
     private List<MfaMethod> defaultMethods() {
         List<MfaMethod> methods = new ArrayList<>();
-        methods.add(new MfaMethod("totp", "Authenticator app (TOTP)", "Use an authenticator application to generate one-time codes.", "otp", List.of("CONFIGURE_TOTP")));
-        methods.add(new MfaMethod("webauthn", "Security key / WebAuthn", "Register a WebAuthn security key.", WebAuthnCredentialModel.TYPE_TWOFACTOR, List.of("webauthn-register")));
-        methods.add(new MfaMethod("webauthn_passwordless", "Passkey (passwordless)", "Register a passkey for passwordless login.", "webauthn-passwordless", List.of("webauthn-register-passwordless")));
-        methods.add(new MfaMethod("recovery_codes", "Recovery codes", "Generate one-time recovery codes.", "recovery-authn-code", List.of("CONFIGURE_RECOVERY_AUTHN_CODES")));
-        methods.add(new MfaMethod("sms_otp", "SMS one-time code", "Receive codes by SMS.", "sms-otp", List.of("sms-authenticator")));
-        methods.add(new MfaMethod("email_otp", "Email one-time code", "Receive codes by email.", "email-otp", List.of("email-authenticator")));
+        methods.add(new MfaMethod("totp", "Authenticator app (TOTP)",
+                "Use an authenticator application to generate one-time codes.", "otp", List.of("CONFIGURE_TOTP")));
+        methods.add(new MfaMethod("webauthn", "Security key / WebAuthn", "Register a WebAuthn security key.",
+                WebAuthnCredentialModel.TYPE_TWOFACTOR, List.of("webauthn-register")));
+        methods.add(new MfaMethod("webauthn_passwordless", "Passkey (passwordless)",
+                "Register a passkey for passwordless login.", "webauthn-passwordless",
+                List.of("webauthn-register-passwordless")));
+        methods.add(new MfaMethod("recovery_codes", "Recovery codes", "Generate one-time recovery codes.",
+                "recovery-authn-code", List.of("CONFIGURE_RECOVERY_AUTHN_CODES")));
+        methods.add(new MfaMethod("sms_otp", "SMS one-time code", "Receive codes by SMS.", "sms-otp",
+                List.of("sms-authenticator")));
+        methods.add(new MfaMethod("email_otp", "Email one-time code", "Receive codes by email.", "email-otp",
+                List.of("email-authenticator")));
         return methods;
     }
 
     private ValidationResult validateSelection(Config config,
-                                               List<MfaMethod> enabledMethods,
-                                               Set<String> configured,
-                                               List<String> requested,
-                                               boolean meetsMinimum) {
+            List<MfaMethod> enabledMethods,
+            Set<String> configured,
+            List<String> requested,
+            boolean meetsMinimum) {
         Set<String> enabledIds = new HashSet<>();
         for (MfaMethod method : enabledMethods) {
             enabledIds.add(method.id());
@@ -395,7 +405,8 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
                 return ValidationResult.invalid("You must select all unconfigured methods.");
             }
         }
-        if (mode == SelectionMode.UP_TO_MAX && config.maxNewMethodsPerLogin > 0 && selected.size() > config.maxNewMethodsPerLogin) {
+        if (mode == SelectionMode.UP_TO_MAX && config.maxNewMethodsPerLogin > 0
+                && selected.size() > config.maxNewMethodsPerLogin) {
             return ValidationResult.invalid("Select no more than " + config.maxNewMethodsPerLogin + " methods.");
         }
         return ValidationResult.valid(selected);
@@ -412,11 +423,11 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
     }
 
     private Response renderForm(AuthenticationFlowContext context,
-                                Config config,
-                                List<MfaMethod> enabledMethods,
-                                Set<String> configuredMethods,
-                                String message,
-                                boolean meetsMinimum) {
+            Config config,
+            List<MfaMethod> enabledMethods,
+            Set<String> configuredMethods,
+            String message,
+            boolean meetsMinimum) {
         String title = meetsMinimum ? "Configure additional sign-in methods" : "Set up more sign-in protection";
         String description = meetsMinimum
                 ? "You can add more MFA methods now for better recovery and flexibility."
@@ -425,7 +436,8 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         StringJoiner body = new StringJoiner("\n");
         body.add("<!DOCTYPE html>");
         body.add("<html lang=\"en\"><head><meta charset=\"UTF-8\"><title>MFA Enrollment</title>");
-        body.add("<style>body{font-family:Arial, sans-serif;background:#f7f7f9;padding:32px;}h1{margin-top:0;}fieldset{border:1px solid #d6d7dc;padding:16px;background:#fff;}label{display:flex;align-items:center;gap:8px;margin:8px 0;}small{color:#555;} .configured{color:green;font-weight:bold;} .error{color:#b30000;margin-bottom:12px;} .help{margin-bottom:12px;color:#333;} .cta{margin-top:16px;}</style>");
+        body.add(
+                "<style>body{font-family:Arial, sans-serif;background:#f7f7f9;padding:32px;}h1{margin-top:0;}fieldset{border:1px solid #d6d7dc;padding:16px;background:#fff;}label{display:flex;align-items:center;gap:8px;margin:8px 0;}small{color:#555;} .configured{color:green;font-weight:bold;} .error{color:#b30000;margin-bottom:12px;} .help{margin-bottom:12px;color:#333;} .cta{margin-top:16px;}</style>");
         body.add("</head><body>");
         body.add("<h1>" + escape(title) + "</h1>");
         body.add("<div class=\"help\">" + escape(description) + "</div>");
@@ -446,8 +458,10 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
             if (available && !configured) {
                 hasSelectable = true;
             }
-            body.add("<label><input type=\"checkbox\" name=\"method\" value=\"" + escape(method.id()) + "\"" + disabledAttr + " />");
-            String status = configured ? "<span class=\"configured\">Configured</span>" : (available ? "" : "<span class=\"configured\">Unavailable</span>");
+            body.add("<label><input type=\"checkbox\" name=\"method\" value=\"" + escape(method.id()) + "\""
+                    + disabledAttr + " />");
+            String status = configured ? "<span class=\"configured\">Configured</span>"
+                    : (available ? "" : "<span class=\"configured\">Unavailable</span>");
             body.add("<div><div><strong>" + escape(method.label()) + "</strong> " + status + "</div>");
             body.add("<small>" + escape(method.description()) + "</small></div></label>");
         }
@@ -457,7 +471,8 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         body.add("</fieldset>");
 
         if (config.allowUserOptOut) {
-            body.add("<label style=\"margin-top:12px;\"><input type=\"checkbox\" name=\"optOut\"/> Don't ask me again</label>");
+            body.add(
+                    "<label style=\"margin-top:12px;\"><input type=\"checkbox\" name=\"optOut\"/> Don't ask me again</label>");
         }
         body.add("<div class=\"cta\"><button type=\"submit\">Continue</button></div>");
         body.add("</form>");
@@ -514,7 +529,8 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         SAME_LOGIN, NEXT_LOGIN_REQUIRED_ACTION, NONE
     }
 
-    private record MfaMethod(String id, String label, String description, String credentialType, List<String> requiredActions) {
+    private record MfaMethod(String id, String label, String description, String credentialType,
+            List<String> requiredActions) {
         boolean isAvailable(RealmModel realm) {
             for (String action : requiredActions) {
                 if (realm.getRequiredActionProviderByAlias(action) == null) {
@@ -557,8 +573,7 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
             List<String> onlyForClients,
             List<String> excludeClients,
             int remindEveryDays,
-            Map<String, String> skipIfAttributeEquals
-    ) {
+            Map<String, String> skipIfAttributeEquals) {
         static Config fromContext(AuthenticationFlowContext context) {
             AuthenticatorConfigModel model = context.getAuthenticatorConfig();
             Map<String, String> cfg = model != null ? model.getConfig() : Collections.emptyMap();
@@ -567,29 +582,32 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
                     parseInt(cfg.get("min_required_from_list"), DEFAULT_MIN_REQUIRED),
                     parseInt(cfg.get("max_allowed_mfa_methods"), 0),
                     parseBoolean(cfg.get("enforce_on_first_login_only"), false),
-                    EnforceForIdpUsers.valueOf(parseEnum(cfg.get("enforce_for_idp_users"), "always", "always").toUpperCase()),
+                    EnforceForIdpUsers
+                            .valueOf(parseEnum(cfg.get("enforce_for_idp_users"), "always", "always").toUpperCase()),
                     parseList(cfg.get("enabled_mfa_types"), DEFAULT_ENABLED_TYPES),
                     parseBoolean(cfg.get("visible_only_if_supported"), true),
                     parseBoolean(cfg.get("hide_already_configured_methods"), false),
-                    SelectionMode.valueOf(parseEnum(cfg.get("selection_mode"), "at_least_one", "at_least_one").toUpperCase()),
+                    SelectionMode.valueOf(
+                            parseEnum(cfg.get("selection_mode"), "at_least_one", "at_least_one").toUpperCase()),
                     parseInt(cfg.get("max_new_methods_per_login"), 0),
                     parseBoolean(cfg.get("fail_if_selection_insufficient"), true),
                     parseBoolean(cfg.get("allow_no_selection_if_already_sufficient"), true),
                     parseBoolean(cfg.get("offer_configure_additional_methods"), true),
-                    PostAuthPromptMode.valueOf(parseEnum(cfg.get("post_auth_prompt_mode"), "same_login", "same_login").toUpperCase()),
+                    PostAuthPromptMode.valueOf(
+                            parseEnum(cfg.get("post_auth_prompt_mode"), "same_login", "same_login").toUpperCase()),
                     parseBoolean(cfg.get("allow_user_opt_out"), true),
                     parseBoolean(cfg.get("opt_out_respected_when_not_sufficient"), false),
                     cfg.getOrDefault("opt_out_attribute_name", "mfaEnrollment.skipFuturePrompts"),
                     parseInt(cfg.get("rollout_percentage"), 100),
-                    RolloutStrategy.valueOf(parseEnum(cfg.get("rollout_strategy"), "hash_user_id", "hash_user_id").toUpperCase()),
+                    RolloutStrategy.valueOf(
+                            parseEnum(cfg.get("rollout_strategy"), "hash_user_id", "hash_user_id").toUpperCase()),
                     parseBoolean(cfg.get("bypass_rollout_if_not_sufficient"), true),
                     parseList(cfg.get("only_for_roles"), List.of()),
                     parseList(cfg.get("exclude_roles"), List.of()),
                     parseList(cfg.get("only_for_clients"), List.of()),
                     parseList(cfg.get("exclude_clients"), List.of()),
                     parseInt(cfg.get("remind_every_days"), 0),
-                    parseKeyValueList(cfg.get("skip_if_attribute_equals"))
-            );
+                    parseKeyValueList(cfg.get("skip_if_attribute_equals")));
         }
 
         private static boolean parseBoolean(String value, boolean defaultValue) {
