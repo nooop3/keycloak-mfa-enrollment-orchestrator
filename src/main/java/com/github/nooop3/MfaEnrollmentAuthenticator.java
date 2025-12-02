@@ -1,4 +1,4 @@
-package com.acme.keycloak.mfa;
+package com.github.nooop3;
 
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.Authenticator;
@@ -14,7 +14,7 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         // 2. Check existing MFA methods
         // 3. If sufficient, context.success()
         // 4. If insufficient, show selection form
-        
+
         // For now, just a placeholder implementation
         context.success();
     }

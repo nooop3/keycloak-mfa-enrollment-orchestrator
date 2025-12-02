@@ -1,4 +1,4 @@
-package com.acme.keycloak.mfa;
+package com.github.nooop3;
 
 import org.keycloak.Config;
 import org.keycloak.authentication.Authenticator;
@@ -38,7 +38,7 @@ public class MfaEnrollmentAuthenticatorFactory implements AuthenticatorFactory {
 
     @Override
     public AuthenticationExecutionModel.Requirement[] getRequirementChoices() {
-        return new AuthenticationExecutionModel.Requirement[]{
+        return new AuthenticationExecutionModel.Requirement[] {
                 AuthenticationExecutionModel.Requirement.REQUIRED,
                 AuthenticationExecutionModel.Requirement.ALTERNATIVE,
                 AuthenticationExecutionModel.Requirement.DISABLED
