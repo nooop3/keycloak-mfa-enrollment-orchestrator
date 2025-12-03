@@ -22,8 +22,7 @@ This directory contains a Docker Compose setup to test the MFA Enrollment Orches
    ```
 
    This will start Keycloak and automatically restart it when you rebuild the project.
-   - Use `docker compose watch --no-prefix` if you prefer slimmer logs in the same terminal.
-   - Alternatively, run `docker compose watch` in one terminal, and in another run `docker compose logs -f keycloak` to tail the server logs while the watcher handles restarts.
+   - Run `docker compose logs -f keycloak` in a separate terminal to tail Keycloak logs while the watcher handles restarts.
 
 3. Access Keycloak at <http://localhost:8080>
    - Admin Console: <http://localhost:8080/admin>
