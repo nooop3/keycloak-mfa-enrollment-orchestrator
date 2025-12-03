@@ -14,6 +14,7 @@ import org.keycloak.credential.CredentialModel;
 import org.keycloak.models.credential.OTPCredentialModel;
 import org.keycloak.models.credential.RecoveryAuthnCodesCredentialModel;
 import org.keycloak.models.credential.WebAuthnCredentialModel;
+import org.keycloak.authentication.requiredactions.WebAuthnRegisterFactory;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import java.time.Duration;
@@ -330,8 +331,7 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
             byId.put(method.id(), method);
         }
         List<MfaMethod> enabled = new ArrayList<>();
-        for (String configuredId : config.enabledMfaTypes) {
-            String id = normalizeMethodId(configuredId);
+        for (String id : config.enabledMfaTypes) {
             MfaMethod method = byId.get(id);
             if (method != null) {
                 if (!config.visibleOnlyIfSupported || method.isAvailable(realm)) {
@@ -346,13 +346,13 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         List<MfaMethod> methods = new ArrayList<>();
         methods.add(new MfaMethod(OTPCredentialModel.TYPE, "Authenticator app (TOTP)",
                 "Use an authenticator application to generate one-time codes.", OTPCredentialModel.TYPE,
-                List.of("CONFIGURE_TOTP")));
+                List.of(UserModel.RequiredAction.CONFIGURE_TOTP.name())));
         methods.add(new MfaMethod(WebAuthnCredentialModel.TYPE_TWOFACTOR, "Security key / WebAuthn",
                 "Register a WebAuthn security key.", WebAuthnCredentialModel.TYPE_TWOFACTOR,
-                List.of("webauthn-register")));
+                List.of(WebAuthnRegisterFactory.PROVIDER_ID)));
         methods.add(new MfaMethod(RecoveryAuthnCodesCredentialModel.TYPE, "Recovery codes",
                 "Generate one-time recovery codes.", RecoveryAuthnCodesCredentialModel.TYPE,
-                List.of("CONFIGURE_RECOVERY_AUTHN_CODES")));
+                List.of(UserModel.RequiredAction.CONFIGURE_RECOVERY_AUTHN_CODES.name())));
         return methods;
     }
 
@@ -666,14 +666,4 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         }
     }
 
-    private static String normalizeMethodId(String id) {
-        if (id == null) {
-            return null;
-        }
-        return switch (id) {
-            case "totp" -> OTPCredentialModel.TYPE;
-            case "recovery_codes" -> RecoveryAuthnCodesCredentialModel.TYPE;
-            default -> id;
-        };
-    }
 }

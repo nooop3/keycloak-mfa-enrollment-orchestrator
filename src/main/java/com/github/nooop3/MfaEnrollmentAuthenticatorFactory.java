@@ -7,6 +7,9 @@ import org.keycloak.models.AuthenticationExecutionModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.provider.ProviderConfigProperty;
+import org.keycloak.models.credential.OTPCredentialModel;
+import org.keycloak.models.credential.RecoveryAuthnCodesCredentialModel;
+import org.keycloak.models.credential.WebAuthnCredentialModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,8 +77,11 @@ public class MfaEnrollmentAuthenticatorFactory implements AuthenticatorFactory {
 
                 // Supported methods
                 props.add(multivalued("enabled_mfa_types", "Enabled MFA Types",
-                                "otp,webauthn,recovery-authn-code",
-                                "List of MFA types the user can choose from (e.g. otp, webauthn, recovery-authn-code)."));
+                                String.join(",", OTPCredentialModel.TYPE, WebAuthnCredentialModel.TYPE_TWOFACTOR,
+                                                RecoveryAuthnCodesCredentialModel.TYPE),
+                                "List of MFA types the user can choose from (e.g. " + OTPCredentialModel.TYPE + ", "
+                                                + WebAuthnCredentialModel.TYPE_TWOFACTOR + ", "
+                                                + RecoveryAuthnCodesCredentialModel.TYPE + ")."));
                 props.add(bool("visible_only_if_supported", "Hide Unsupported Methods", true,
                                 "Show methods only when the backing required action/authenticator is available."));
                 props.add(bool("hide_already_configured_methods", "Hide Configured Methods", false,
