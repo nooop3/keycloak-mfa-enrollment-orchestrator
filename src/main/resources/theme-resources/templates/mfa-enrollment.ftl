@@ -14,20 +14,23 @@
             <div class="${properties.kcFormGroupClass!}">
                 <div class="${properties.kcInputWrapperClass!}">
                     <#list mfaMethods as method>
-                        <div class="kc-mfa-method <#if method.configured>kc-configured</#if> <#if !method.available>kc-unavailable</#if>">
-                            <label>
-                                <input type="checkbox"
-                                       name="method"
-                                       value="${method.id}"
-                                       <#if method.configured || !method.available>disabled</#if>>
-                                <span class="kc-method-label">${method.label}</span>
-                            </label>
-                            <#if method.configured>
-                                <span class="kc-badge">${msg("configured","Configured")}</span>
-                            <#elseif !method.available>
-                                <span class="kc-badge">${msg("notAvailable","Unavailable")}</span>
-                            </#if>
-                            <div class="kc-method-description">${method.description}</div>
+                        <div class="kc-mfa-method" style="margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 4px; <#if method.configured>background-color: #f9f9f9; opacity: 0.7;</#if>">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <label style="display: flex; align-items: center; flex-grow: 1; cursor: pointer;">
+                                    <input type="checkbox"
+                                           name="method"
+                                           value="${method.id}"
+                                           <#if method.configured || !method.available>disabled</#if>
+                                           style="margin-right: 10px;">
+                                    <span class="kc-method-label" style="font-weight: bold;">${method.label}</span>
+                                </label>
+                                <#if method.configured>
+                                    <span class="kc-badge" style="background-color: #e0e0e0; color: #555; padding: 2px 8px; border-radius: 10px; font-size: 0.8em;">${msg("configured","Configured")}</span>
+                                <#elseif !method.available>
+                                    <span class="kc-badge" style="background-color: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 10px; font-size: 0.8em;">${msg("notAvailable","Unavailable")}</span>
+                                </#if>
+                            </div>
+                            <div class="kc-method-description" style="margin-left: 25px; color: #666; font-size: 0.9em; margin-top: 5px;">${method.description}</div>
                         </div>
                     </#list>
                     <#if !hasSelectable?? || !hasSelectable>
@@ -40,7 +43,7 @@
                 <div class="${properties.kcFormGroupClass!}">
                     <label class="checkbox">
                         <input type="checkbox" name="optOut">
-                        ${msg("dontAskAgain","Don't ask me again")}
+                        ${optOutLabel!msg("dontAskAgain","Don't ask me again")}
                     </label>
                 </div>
             </#if>
