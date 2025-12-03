@@ -34,6 +34,7 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
 
     private static final String ATTR_LAST_PROMPT = "mfaEnrollment.lastPrompt";
     private static final String ATTR_FIRST_LOGIN_COMPLETED = "mfaEnrollment.firstLoginCompleted";
+    public static final String ATTR_SKIP_FUTURE_PROMPTS = "mfaEnrollment.skipFuturePrompts";
     private static final int DEFAULT_MIN_REQUIRED = 1;
     private static final List<String> DEFAULT_ENABLED_TYPES = List.of(
             OTPCredentialModel.TYPE,
@@ -586,7 +587,7 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
                             parseEnum(cfg.get("post_auth_prompt_mode"), "same_login", "same_login").toUpperCase()),
                     parseBoolean(cfg.get("allow_user_opt_out"), true),
                     parseBoolean(cfg.get("opt_out_respected_when_not_sufficient"), false),
-                    cfg.getOrDefault("opt_out_attribute_name", "mfaEnrollment.skipFuturePrompts"),
+                    cfg.getOrDefault("opt_out_attribute_name", ATTR_SKIP_FUTURE_PROMPTS),
                     parseInt(cfg.get("rollout_percentage"), 100),
                     RolloutStrategy.valueOf(
                             parseEnum(cfg.get("rollout_strategy"), "hash_user_id", "hash_user_id").toUpperCase()),

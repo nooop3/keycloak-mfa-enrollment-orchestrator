@@ -111,7 +111,8 @@ public class MfaEnrollmentAuthenticatorFactory implements AuthenticatorFactory {
                                 "Show a 'don't ask again' option to the user."));
                 props.add(bool("opt_out_respected_when_not_sufficient", "Respect Opt-Out When Not Sufficient", false,
                                 "If true, opt-out is honored even if the user does not meet minimum requirements."));
-                props.add(string("opt_out_attribute_name", "Opt-Out Attribute Name", "mfaEnrollment.skipFuturePrompts",
+                props.add(string("opt_out_attribute_name", "Opt-Out Attribute Name",
+                                MfaEnrollmentAuthenticator.ATTR_SKIP_FUTURE_PROMPTS,
                                 "User attribute used to store the opt-out flag."));
 
                 // Rollout
