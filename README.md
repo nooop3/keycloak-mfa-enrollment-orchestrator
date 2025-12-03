@@ -115,3 +115,17 @@ A Keycloak authenticator provider that guides users through configuring addition
 ## Development Status
 
 This repository currently contains the design and requirements for the authenticator. Implementation, packaging, and deployment steps will be added alongside the code.
+
+## Continuous Integration & Releases
+
+GitLab CI/CD is configured in `.gitlab-ci.yml` to automatically:
+
+- run `mvn verify` for merge request and branch pipelines;
+- package the authenticator JAR and expose it as a job artifact;
+- publish a GitLab Release (with the compiled JAR attached) whenever a Git tag is pushed.
+
+To cut a release:
+
+1. Update the project version/notes as needed.
+2. Push a tag (for example `git tag -a v1.0.0 -m "v1.0.0"` followed by `git push origin v1.0.0`).
+3. GitLab will run the pipeline, build the JAR, upload it to project uploads, and create a Release named after the tag with a direct download link to the artifact.
