@@ -124,7 +124,7 @@ This repository currently contains the design and requirements for the authentic
 To cut a release:
 
 1. Update the project version/notes as needed.
-2. Create and push a tag (for example `git tag -a v1.0.0 -m "v1.0.0"` followed by `git push origin v1.0.0`).
+2. Create and push a tag (for example `git tag -a v0.0.1 -m "v0.0.1"` followed by `git push origin v0.0.1`).
 3. The respective CI platform will build, upload the artifact, and publish the release named after the tag with a direct download link to the JAR.
 
 ### Local Auto-Packaging
