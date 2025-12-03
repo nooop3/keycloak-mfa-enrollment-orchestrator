@@ -74,8 +74,8 @@ public class MfaEnrollmentAuthenticatorFactory implements AuthenticatorFactory {
 
         // Supported methods
         props.add(multivalued("enabled_mfa_types", "Enabled MFA Types",
-                "totp,webauthn,webauthn_passwordless,recovery_codes",
-                "List of MFA types the user can choose from (e.g. totp, webauthn, recovery_codes)."));
+                "otp,webauthn,webauthn-passwordless,recovery-authn-code",
+                "List of MFA types the user can choose from (e.g. otp, webauthn, recovery-authn-code)."));
         props.add(bool("visible_only_if_supported", "Hide Unsupported Methods", true,
                 "Show methods only when the backing required action/authenticator is available."));
         props.add(bool("hide_already_configured_methods", "Hide Configured Methods", false,

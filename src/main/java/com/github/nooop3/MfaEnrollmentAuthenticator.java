@@ -11,6 +11,8 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.credential.CredentialModel;
+import org.keycloak.models.credential.OTPCredentialModel;
+import org.keycloak.models.credential.RecoveryAuthnCodesCredentialModel;
 import org.keycloak.models.credential.WebAuthnCredentialModel;
 import org.keycloak.models.SubjectCredentialManager;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -25,16 +27,19 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MfaEnrollmentAuthenticator implements Authenticator {
 
     private static final String ATTR_LAST_PROMPT = "mfaEnrollment.lastPrompt";
-    private static final String ATTR_FIRST_LOGIN_COMPLETED = "mfa.firstLoginCompleted";
+    private static final String ATTR_FIRST_LOGIN_COMPLETED = "mfaEnrollment.firstLoginCompleted";
     private static final int DEFAULT_MIN_REQUIRED = 1;
-    private static final List<String> DEFAULT_ENABLED_TYPES = List.of("totp", "webauthn", "webauthn_passwordless",
-            "recovery_codes");
+    private static final String WEBAUTHN_PASSWORDLESS_TYPE = "webauthn-passwordless";
+    private static final List<String> DEFAULT_ENABLED_TYPES = List.of(
+            OTPCredentialModel.TYPE,
+            WebAuthnCredentialModel.TYPE_TWOFACTOR,
+            WEBAUTHN_PASSWORDLESS_TYPE,
+            RecoveryAuthnCodesCredentialModel.TYPE);
 
     @Override
     public void authenticate(AuthenticationFlowContext context) {
@@ -314,20 +319,14 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         credentialManager.getStoredCredentialsStream()
                 .map(CredentialModel::getType)
                 .forEach(type -> {
-                    if ("otp".equals(type)) {
-                        configured.add("totp");
+                    if (OTPCredentialModel.TYPE.equals(type)) {
+                        configured.add(OTPCredentialModel.TYPE);
                     } else if (WebAuthnCredentialModel.TYPE_TWOFACTOR.equals(type)) {
-                        configured.add("webauthn");
-                    } else if ("webauthn-passwordless".equals(type)) {
-                        configured.add("webauthn_passwordless");
-                    } else if ("recovery-authn-code".equals(type)) {
-                        configured.add("recovery_codes");
-                    } else if ("sms-otp".equals(type)) {
-                        configured.add("sms_otp");
-                    } else if ("email-otp".equals(type)) {
-                        configured.add("email_otp");
-                    } else if (type.startsWith("custom:")) {
-                        configured.add(type);
+                        configured.add(WebAuthnCredentialModel.TYPE_TWOFACTOR);
+                    } else if (WEBAUTHN_PASSWORDLESS_TYPE.equals(type)) {
+                        configured.add(WEBAUTHN_PASSWORDLESS_TYPE);
+                    } else if (RecoveryAuthnCodesCredentialModel.TYPE.equals(type)) {
+                        configured.add(RecoveryAuthnCodesCredentialModel.TYPE);
                     }
                 });
         return configured;
@@ -340,16 +339,12 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
             byId.put(method.id(), method);
         }
         List<MfaMethod> enabled = new ArrayList<>();
-        for (String id : config.enabledMfaTypes) {
+        for (String configuredId : config.enabledMfaTypes) {
+            String id = normalizeMethodId(configuredId);
             MfaMethod method = byId.get(id);
             if (method != null) {
                 if (!config.visibleOnlyIfSupported || method.isAvailable(realm)) {
                     enabled.add(method);
-                }
-            } else if (id.startsWith("custom:")) {
-                MfaMethod custom = MfaMethod.custom(id, id.substring("custom:".length()));
-                if (!config.visibleOnlyIfSupported || custom.isAvailable(realm)) {
-                    enabled.add(custom);
                 }
             }
         }
@@ -358,19 +353,18 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
 
     private List<MfaMethod> defaultMethods() {
         List<MfaMethod> methods = new ArrayList<>();
-        methods.add(new MfaMethod("totp", "Authenticator app (TOTP)",
-                "Use an authenticator application to generate one-time codes.", "otp", List.of("CONFIGURE_TOTP")));
-        methods.add(new MfaMethod("webauthn", "Security key / WebAuthn", "Register a WebAuthn security key.",
-                WebAuthnCredentialModel.TYPE_TWOFACTOR, List.of("webauthn-register")));
-        methods.add(new MfaMethod("webauthn_passwordless", "Passkey (passwordless)",
-                "Register a passkey for passwordless login.", "webauthn-passwordless",
+        methods.add(new MfaMethod(OTPCredentialModel.TYPE, "Authenticator app (TOTP)",
+                "Use an authenticator application to generate one-time codes.", OTPCredentialModel.TYPE,
+                List.of("CONFIGURE_TOTP")));
+        methods.add(new MfaMethod(WebAuthnCredentialModel.TYPE_TWOFACTOR, "Security key / WebAuthn",
+                "Register a WebAuthn security key.", WebAuthnCredentialModel.TYPE_TWOFACTOR,
+                List.of("webauthn-register")));
+        methods.add(new MfaMethod(WEBAUTHN_PASSWORDLESS_TYPE, "Passkey (passwordless)",
+                "Register a passkey for passwordless login.", WEBAUTHN_PASSWORDLESS_TYPE,
                 List.of("webauthn-register-passwordless")));
-        methods.add(new MfaMethod("recovery_codes", "Recovery codes", "Generate one-time recovery codes.",
-                "recovery-authn-code", List.of("CONFIGURE_RECOVERY_AUTHN_CODES")));
-        methods.add(new MfaMethod("sms_otp", "SMS one-time code", "Receive codes by SMS.", "sms-otp",
-                List.of("sms-authenticator")));
-        methods.add(new MfaMethod("email_otp", "Email one-time code", "Receive codes by email.", "email-otp",
-                List.of("email-authenticator")));
+        methods.add(new MfaMethod(RecoveryAuthnCodesCredentialModel.TYPE, "Recovery codes",
+                "Generate one-time recovery codes.", RecoveryAuthnCodesCredentialModel.TYPE,
+                List.of("CONFIGURE_RECOVERY_AUTHN_CODES")));
         return methods;
     }
 
@@ -516,11 +510,6 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
             return true;
         }
 
-        static MfaMethod custom(String id, String alias) {
-            List<String> actions = new ArrayList<>();
-            actions.add(alias);
-            return new MfaMethod(id, "Custom: " + alias, "Custom enrollment step: " + alias, id, actions);
-        }
     }
 
     public static class MethodView {
@@ -687,5 +676,17 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         static ValidationResult invalid(String message) {
             return new ValidationResult(false, List.of(), message);
         }
+    }
+
+    private static String normalizeMethodId(String id) {
+        if (id == null) {
+            return null;
+        }
+        return switch (id) {
+            case "totp" -> OTPCredentialModel.TYPE;
+            case "webauthn_passwordless" -> WEBAUTHN_PASSWORDLESS_TYPE;
+            case "recovery_codes" -> RecoveryAuthnCodesCredentialModel.TYPE;
+            default -> id;
+        };
     }
 }

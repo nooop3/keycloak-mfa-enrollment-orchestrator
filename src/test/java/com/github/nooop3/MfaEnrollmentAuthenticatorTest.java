@@ -109,7 +109,7 @@ class MfaEnrollmentAuthenticatorTest {
     @Test
     void testAuthenticate_SkipByFirstLoginCompleted() {
         config.put("enforce_on_first_login_only", "true");
-        when(user.getFirstAttribute("mfa.firstLoginCompleted")).thenReturn("true");
+        when(user.getFirstAttribute("mfaEnrollment.firstLoginCompleted")).thenReturn("true");
 
         authenticator.authenticate(context);
         verify(context).success();
@@ -150,10 +150,10 @@ class MfaEnrollmentAuthenticatorTest {
     @Test
     void testAction_SelectMethod() {
         // Enable TOTP
-        config.put("enabled_mfa_types", "totp");
+        config.put("enabled_mfa_types", "otp");
 
         MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
-        formData.add("method", "totp");
+        formData.add("method", "otp");
         when(httpRequest.getDecodedFormParameters()).thenReturn(formData);
 
         // Mock realm to have required action
@@ -168,7 +168,7 @@ class MfaEnrollmentAuthenticatorTest {
 
     @Test
     void testAction_InvalidSelection() {
-        config.put("enabled_mfa_types", "totp");
+        config.put("enabled_mfa_types", "otp");
 
         MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
         // No method selected

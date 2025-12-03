@@ -32,7 +32,7 @@ A Keycloak authenticator provider that guides users through configuring addition
 
 ### Supported MFA Methods
 
-- `enabled_mfa_types` (list): `totp`, `webauthn`, `webauthn_passwordless`, `recovery_codes`, `sms_otp`, `email_otp`, `custom:<id>`.
+- `enabled_mfa_types` (list): `otp`, `webauthn`, `webauthn-passwordless`, `recovery-authn-code` (these match Keycloak credential type IDs).
 - `visible_only_if_supported` (bool, default true): Hide methods lacking backing required action/authenticator.
 - `hide_already_configured_methods` (bool, default false): Do not show methods the user already configured.
 
@@ -79,7 +79,7 @@ A Keycloak authenticator provider that guides users through configuring addition
 ### Strict (must enroll, no opt-out)
 
 - `min_required_mfa_methods = 1`
-- `enabled_mfa_types = [totp, webauthn, webauthn_passwordless, recovery_codes]`
+- `enabled_mfa_types = [otp, webauthn, webauthn-passwordless, recovery-authn-code]`
 - `selection_mode = at_least_one`
 - `fail_if_selection_insufficient = true`
 - `allow_user_opt_out = false`
@@ -88,7 +88,7 @@ A Keycloak authenticator provider that guides users through configuring addition
 ### Soft rollout (20% nudge for extra MFA)
 
 - `min_required_mfa_methods = 1`
-- `enabled_mfa_types = [webauthn, recovery_codes]`
+- `enabled_mfa_types = [webauthn, recovery-authn-code]`
 - `rollout_percentage = 20`
 - `rollout_strategy = hash_user_id`
 - `bypass_rollout_if_not_sufficient = false`
@@ -100,7 +100,7 @@ A Keycloak authenticator provider that guides users through configuring addition
 ### Sensitive clients only
 
 - `min_required_mfa_methods = 2`
-- `enabled_mfa_types = [totp, webauthn, webauthn_passwordless]`
+- `enabled_mfa_types = [otp, webauthn, webauthn-passwordless]`
 - `selection_mode = at_least_one`
 - `only_for_clients = ["admin-portal", "prod-dashboard"]`
 - `only_for_roles = ["admin", "ops"]`

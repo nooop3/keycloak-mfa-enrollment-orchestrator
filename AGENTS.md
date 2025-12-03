@@ -59,7 +59,7 @@ These options control **when** the authenticator actually prompts the user.
   Upper bound of methods considered. If provided and user already has ≥ this number, the authenticator will skip instead of pushing more enrollment.
 
 - **`enforce_on_first_login_only` (boolean, default: false)**
-  When enabled, runs only on the user’s **first successful login** (tracked via a user attribute like `mfa.firstLoginCompleted`).
+  When enabled, runs only on the user’s **first successful login** (tracked via a user attribute like `mfaEnrollment.firstLoginCompleted`).
 
 - **`enforce_for_idp_users` (enum: `always`, `never`, `only`, default: `always`)**
   Controls behavior when the user came from a brokered IdP login:
@@ -74,14 +74,11 @@ These options control **when** the authenticator actually prompts the user.
 These options define which methods the **user can see and select**.
 
 - **`enabled_mfa_types` (multivalued list of enums)**
-  Possible values (depending on Keycloak version and your realm setup):
-  - `totp` – Time-based OTP (built-in `CONFIGURE_TOTP`).
+  Possible values map directly to Keycloak credential type identifiers:
+  - `otp` – Time-based OTP (built-in `CONFIGURE_TOTP`).
   - `webauthn` – WebAuthn security key (username + password + WebAuthn).
-  - `webauthn_passwordless` – WebAuthn passkeys / passwordless.
-  - `recovery_codes` – Recovery authentication codes.
-  - `sms_otp` – SMS-based OTP (if you have a plugin / authenticator for it).
-  - `email_otp` – Email OTP.
-  - `custom:<id>` – Any custom Required Action or authenticator alias.
+  - `webauthn-passwordless` – WebAuthn passkeys / passwordless.
+  - `recovery-authn-code` – Recovery authentication codes.
 
   The provider will:
   - Map each enum to a human-readable label and description.
@@ -252,7 +249,7 @@ These options let admins fine-tune **who** is targeted.
 ### A. Strict Rollout: Enforce at Least One MFA, No Opt-Out
 
 - `min_required_mfa_methods = 1`
-- `enabled_mfa_types = [totp, webauthn, webauthn_passwordless, recovery_codes]`
+- `enabled_mfa_types = [otp, webauthn, webauthn-passwordless, recovery-authn-code]`
 - `selection_mode = at_least_one`
 - `fail_if_selection_insufficient = true`
 - `allow_user_opt_out = false`
@@ -266,7 +263,7 @@ Any user without at least one of the configured methods must enroll at least one
 ### B. Soft Rollout: Offer Extra MFA to 20% of Users
 
 - `min_required_mfa_methods = 1`
-- `enabled_mfa_types = [webauthn, recovery_codes]`
+- `enabled_mfa_types = [webauthn, recovery-authn-code]`
 - `rollout_percentage = 20`
 - `rollout_strategy = hash_user_id`
 - `bypass_rollout_if_not_sufficient = false`
@@ -283,7 +280,7 @@ Users who already have basic MFA might occasionally be asked to add WebAuthn or 
 ### C. Security-Sensitive Clients Only
 
 - `min_required_mfa_methods = 2`
-- `enabled_mfa_types = [totp, webauthn, webauthn_passwordless]`
+- `enabled_mfa_types = [otp, webauthn, webauthn-passwordless]`
 - `selection_mode = at_least_one`
 - `only_for_clients = [ "admin-portal", "prod-dashboard" ]`
 - `only_for_roles = [ "admin", "ops" ]`
