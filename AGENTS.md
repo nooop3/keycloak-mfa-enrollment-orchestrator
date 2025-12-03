@@ -122,7 +122,7 @@ These options define **what the user must choose** for the login to proceed.
 
 Letting users continue configuring other methods after login.
 
-- **`offer_configure_additional_methods` (boolean, default: true)**  
+- **`offer_configure_additional_methods` (boolean, default: true)**
   After user successfully configures one MFA and meets the min requirements, show a small screen:
   - “You’ve successfully set up TOTP. Do you want to configure additional methods now?”
   - Display remaining unconfigured methods.
@@ -137,7 +137,7 @@ Letting users continue configuring other methods after login.
 
 ### 5. “Don’t Show Again” / User Opt-Out
 
-- **`allow_user_opt_out` (boolean, default: true)**  
+- **`allow_user_opt_out` (boolean, default: true)**
   Shows a checkbox such as “Don’t ask me to configure more MFA methods again”.
 
   When user checks this:
@@ -156,7 +156,7 @@ Letting users continue configuring other methods after login.
 
 ### 6. Percentage-Based Rollout
 
-- **`rollout_percentage` (int, 0–100, default: 100)**  
+- **`rollout_percentage` (int, 0–100, default: 100)**
   Probability that a user will see the authenticator, assuming all other conditions are met.
 
 - **`rollout_strategy` (enum: `random`, `hash_user_id`, default: `hash_user_id`)**
