@@ -16,13 +16,15 @@
                     <#list mfaMethods as method>
                         <div class="kc-mfa-method" style="margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 4px; <#if method.configured>background-color: #f9f9f9; opacity: 0.7;</#if>">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <label style="display: flex; align-items: center; flex-grow: 1; cursor: pointer;">
-                                    <input type="checkbox"
-                                           name="method"
-                                           value="${method.id}"
-                                           <#if method.configured || !method.available>disabled</#if>
-                                           style="margin-right: 10px;">
-                                    <span class="kc-method-label" style="font-weight: bold;">${method.label}</span>
+                                <label style="display: flex; align-items: center; flex-grow: 1; cursor: <#if method.configured>default<#else>pointer</#if>;">
+                                    <#if !method.configured>
+                                        <input type="checkbox"
+                                               name="method"
+                                               value="${method.id}"
+                                               <#if !method.available>disabled</#if>
+                                               style="margin-right: 10px;">
+                                    </#if>
+                                    <span class="kc-method-label" style="font-weight: bold; <#if method.configured>margin-left: 0;<#else>margin-left: 0;</#if>">${method.label}</span>
                                 </label>
                                 <#if method.configured>
                                     <span class="kc-badge" style="background-color: #e0e0e0; color: #555; padding: 2px 8px; border-radius: 10px; font-size: 0.8em;">${msg("configured","Configured")}</span>
