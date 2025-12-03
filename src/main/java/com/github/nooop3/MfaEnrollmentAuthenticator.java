@@ -154,7 +154,7 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
                     .ifPresent(method -> registerRequiredActions(context, method, pushActionsToNextLogin));
         }
 
-        if (optOutRequested && config.allowUserOptOut && !validation.acceptedMethods.isEmpty()) {
+        if (optOutRequested && config.allowUserOptOut) {
             user.setSingleAttribute(config.optOutAttributeName, "true");
         }
 
