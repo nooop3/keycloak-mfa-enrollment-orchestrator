@@ -14,7 +14,7 @@
             <div class="${properties.kcFormGroupClass!}">
                 <div class="${properties.kcInputWrapperClass!}">
                     <#list mfaMethods as method>
-                        <div class="kc-mfa-method" style="margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 4px; <#if method.configured>background-color: #f9f9f9; opacity: 0.7;</#if>">
+                        <div class="kc-mfa-method" style="margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 4px; <#if method.configured>opacity: 0.4;</#if>">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <label style="display: flex; align-items: center; flex-grow: 1; cursor: <#if method.configured>default<#else>pointer</#if>;">
                                     <#if !method.configured>
