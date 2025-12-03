@@ -53,7 +53,7 @@ These options control **when** the authenticator actually prompts the user.
   Minimum number of distinct MFA methods a user must have configured overall (across all supported types). If the user has at least this many, the authenticator **skips**.
 
 - **`min_required_from_list` (integer, default: 1)**
-  Minimum number of methods from the *admin-configured list* that the user must have. This allows you to enforce “at least one of [TOTP, WebAuthn]” even if the user has some other method elsewhere.
+  Minimum number of methods from the _admin-configured list_ that the user must have. This allows you to enforce “at least one of [TOTP, WebAuthn]” even if the user has some other method elsewhere.
 
 - **`max_allowed_mfa_methods` (integer, optional)**
   Upper bound of methods considered. If provided and user already has ≥ this number, the authenticator will skip instead of pushing more enrollment.
@@ -101,7 +101,6 @@ These options define which methods the **user can see and select**.
 These options define **what the user must choose** for the login to proceed.
 
 - **`selection_mode` (enum: `at_least_one`, `exactly_one`, `all_unconfigured`, `up_to_max`, default: `at_least_one`)**
-
   - `at_least_one` – user must select at least one **new** method.
   - `exactly_one` – user must select exactly one method.
   - `all_unconfigured` – user must select all methods from the list that are not yet configured.
@@ -161,7 +160,6 @@ Letting users continue configuring other methods after login.
   Probability that a user will see the authenticator, assuming all other conditions are met.
 
 - **`rollout_strategy` (enum: `random`, `hash_user_id`, default: `hash_user_id`)**
-
   - `random` – each login, generate a random number 0–99. If `< rollout_percentage`, prompt user.
   - `hash_user_id` – compute a stable hash of the user ID (or username/email), normalize to 0–99, and compare to `rollout_percentage`. This ensures that the **same** users are consistently included/excluded.
 
@@ -193,7 +191,7 @@ These options let admins fine-tune **who** is targeted.
   For example:
   - `securityLevel=low`
   - `mfaEnrollment.skip=true`
-  If any configured user attribute equals configured value, authenticator skips.
+    If any configured user attribute equals configured value, authenticator skips.
 
 ---
 
@@ -218,34 +216,34 @@ These options let admins fine-tune **who** is targeted.
 
 1. Gather user’s currently configured MFA methods.
 2. If user meets `min_required_mfa_methods` AND `min_required_from_list`:
-    - If `offer_configure_additional_methods` is false → SKIP.
-    - Else show “configure more methods?” screen, or skip based on percentage.
+   - If `offer_configure_additional_methods` is false → SKIP.
+   - Else show “configure more methods?” screen, or skip based on percentage.
 
 3. If user does not meet requirements:
-    - Build list of **unconfigured** methods from `enabled_mfa_types` (respect visibility settings).
-    - If list is empty:
-      - Either SKIP (nothing to offer) or FAIL based on config (strict).
-    - Render selector screen with selection rules.
+   - Build list of **unconfigured** methods from `enabled_mfa_types` (respect visibility settings).
+   - If list is empty:
+     - Either SKIP (nothing to offer) or FAIL based on config (strict).
+   - Render selector screen with selection rules.
 
 **User interaction:**
 
 1. User selects set of methods `S` and optionally toggles “don’t show again”.
 2. Validate `S` against `selection_mode`, `min_required_from_list`, and `max_new_methods_per_login`.
-    - If invalid and `fail_if_selection_insufficient` → FAIL.
-    - If invalid and `fail_if_selection_insufficient = false` → SKIP (soft fail).
+   - If invalid and `fail_if_selection_insufficient` → FAIL.
+   - If invalid and `fail_if_selection_insufficient = false` → SKIP (soft fail).
 3. For each method `m ∈ S`, register relevant Required Action(s) on the authentication session.
 4. If “don’t show again” selected:
-    - Set `opt_out_attribute_name = "true"` on user after successful enrollment (not before).
+   - Set `opt_out_attribute_name = "true"` on user after successful enrollment (not before).
 
 **Return from Required Actions:**
 
 1. On next pass (same login or next login based on `post_auth_prompt_mode`), recompute configured MFA methods.
 2. If still insufficient:
-    - Either prompt again or FAIL, depending on configuration.
+   - Either prompt again or FAIL, depending on configuration.
 3. If sufficient:
-    - If `offer_configure_additional_methods` enabled and there are still unconfigured methods:
-      - Show “configure more?” screen.
-    - Otherwise SUCCESS and continue flow.
+   - If `offer_configure_additional_methods` enabled and there are still unconfigured methods:
+     - Show “configure more?” screen.
+   - Otherwise SUCCESS and continue flow.
 
 ---
 
@@ -322,4 +320,4 @@ The authenticator’s UI should:
 
 ---
 
-This authenticator is designed to be a **flexible MFA enrollment orchestrator**: admins get fine-grained control over *when* and *how* users are asked to configure additional MFA, and users get maximum freedom in **which methods** they choose, while still allowing strong policies where needed.
+This authenticator is designed to be a **flexible MFA enrollment orchestrator**: admins get fine-grained control over _when_ and _how_ users are asked to configure additional MFA, and users get maximum freedom in **which methods** they choose, while still allowing strong policies where needed.
