@@ -3,6 +3,7 @@ package com.github.nooop3;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.Authenticator;
 import org.keycloak.authentication.AuthenticationFlowError;
+import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.AuthenticationExecutionModel;
 import org.keycloak.models.AuthenticatorConfigModel;
 import org.keycloak.models.ClientModel;
@@ -433,20 +434,8 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
                 ? "You can add more MFA methods now for better recovery and flexibility."
                 : "Your account needs additional multi-factor methods before continuing.";
 
-        StringJoiner body = new StringJoiner("\n");
-        body.add("<!DOCTYPE html>");
-        body.add("<html lang=\"en\"><head><meta charset=\"UTF-8\"><title>MFA Enrollment</title>");
-        body.add(
-                "<style>body{font-family:Arial, sans-serif;background:#f7f7f9;padding:32px;}h1{margin-top:0;}fieldset{border:1px solid #d6d7dc;padding:16px;background:#fff;}label{display:flex;align-items:center;gap:8px;margin:8px 0;}small{color:#555;} .configured{color:green;font-weight:bold;} .error{color:#b30000;margin-bottom:12px;} .help{margin-bottom:12px;color:#333;} .cta{margin-top:16px;}</style>");
-        body.add("</head><body>");
-        body.add("<h1>" + escape(title) + "</h1>");
-        body.add("<div class=\"help\">" + escape(description) + "</div>");
-        if (message != null) {
-            body.add("<div class=\"error\">" + escape(message) + "</div>");
-        }
-        body.add("<form method=\"post\">");
-        body.add("<fieldset><legend>Available methods</legend>");
-
+        LoginFormsProvider form = context.form();
+        List<MethodView> methodViews = new ArrayList<>();
         boolean hasSelectable = false;
         for (MfaMethod method : enabledMethods) {
             boolean configured = configuredMethods.contains(method.id());
@@ -454,34 +443,21 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
             if (configured && config.hideAlreadyConfiguredMethods) {
                 continue;
             }
-            String disabledAttr = (!available || configured) ? " disabled" : "";
-            if (available && !configured) {
+            if (!configured && available) {
                 hasSelectable = true;
             }
-            body.add("<label><input type=\"checkbox\" name=\"method\" value=\"" + escape(method.id()) + "\""
-                    + disabledAttr + " />");
-            String status = configured ? "<span class=\"configured\">Configured</span>"
-                    : (available ? "" : "<span class=\"configured\">Unavailable</span>");
-            body.add("<div><div><strong>" + escape(method.label()) + "</strong> " + status + "</div>");
-            body.add("<small>" + escape(method.description()) + "</small></div></label>");
+            methodViews.add(new MethodView(method.id(), method.label(), method.description(), configured, available));
         }
-        if (!hasSelectable) {
-            body.add("<div class=\"help\">No additional methods available.</div>");
-        }
-        body.add("</fieldset>");
 
-        if (config.allowUserOptOut) {
-            body.add(
-                    "<label style=\"margin-top:12px;\"><input type=\"checkbox\" name=\"optOut\"/> Don't ask me again</label>");
-        }
-        body.add("<div class=\"cta\"><button type=\"submit\">Continue</button></div>");
-        body.add("</form>");
-        body.add("</body></html>");
+        form.setAttribute("title", title)
+                .setAttribute("description", description)
+                .setAttribute("message", message)
+                .setAttribute("mfaMethods", methodViews)
+                .setAttribute("allowOptOut", config.allowUserOptOut)
+                .setAttribute("hasSelectable", hasSelectable)
+                .setAttribute("meetsMinimum", meetsMinimum);
 
-        return Response.status(Response.Status.OK)
-                .header("X-Frame-Options", "SAMEORIGIN")
-                .entity(body.toString())
-                .build();
+        return form.createForm("mfa-enrollment.ftl");
     }
 
     private Response renderError(AuthenticationFlowContext context, String message) {
@@ -544,6 +520,42 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
             List<String> actions = new ArrayList<>();
             actions.add(alias);
             return new MfaMethod(id, "Custom: " + alias, "Custom enrollment step: " + alias, id, actions);
+        }
+    }
+
+    public static class MethodView {
+        private final String id;
+        private final String label;
+        private final String description;
+        private final boolean configured;
+        private final boolean available;
+
+        MethodView(String id, String label, String description, boolean configured, boolean available) {
+            this.id = id;
+            this.label = label;
+            this.description = description;
+            this.configured = configured;
+            this.available = available;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public boolean isConfigured() {
+            return configured;
+        }
+
+        public boolean isAvailable() {
+            return available;
         }
     }
 

@@ -126,3 +126,15 @@ To cut a release:
 1. Update the project version/notes as needed.
 2. Create and push a tag (for example `git tag -a v1.0.0 -m "v1.0.0"` followed by `git push origin v1.0.0`).
 3. The respective CI platform will build, upload the artifact, and publish the release named after the tag with a direct download link to the JAR.
+
+### Local Auto-Packaging
+
+Use `scripts/watch-mvn-package.sh` to automatically rerun `mvn package` whenever source or template files change. The script prefers [`watchexec`](https://github.com/watchexec/watchexec) but will fall back to [`entr`](https://eradman.com/entrproject/) when available:
+
+```bash
+scripts/watch-mvn-package.sh
+```
+
+Keep the watcher running while you iterate locally; it rebuilds the provider after every change so you can rapidly copy the fresh JAR into your Keycloak deployment for testing.
+
+When combined with `docker compose watch` (see `deploy/README.md`), each successful package also updates `.dev/keycloak-restart`, prompting Docker Compose to restart Keycloak so the new provider is loaded automatically.

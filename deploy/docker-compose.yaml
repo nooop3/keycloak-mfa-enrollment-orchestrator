@@ -9,3 +9,8 @@ services:
       - "8080:8080"
     volumes:
       - ../target:/opt/keycloak/providers
+    develop:
+      watch:
+        - action: sync+restart
+          path: ../.dev
+          target: /tmp/.dev

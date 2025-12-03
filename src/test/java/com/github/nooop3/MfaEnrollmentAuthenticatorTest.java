@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
+import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.AuthenticationExecutionModel;
 import org.keycloak.models.AuthenticatorConfigModel;
 import org.keycloak.models.ClientModel;
@@ -54,6 +55,8 @@ class MfaEnrollmentAuthenticatorTest {
     private HttpRequest httpRequest;
     @Mock
     private SubjectCredentialManager credentialManager;
+    @Mock
+    private LoginFormsProvider loginFormsProvider;
 
     private MfaEnrollmentAuthenticator authenticator;
     private Map<String, String> config;
@@ -74,6 +77,12 @@ class MfaEnrollmentAuthenticatorTest {
         lenient().when(user.credentialManager()).thenReturn(credentialManager);
         lenient().when(credentialManager.getStoredCredentialsStream()).thenReturn(Stream.empty());
         lenient().when(context.getHttpRequest()).thenReturn(httpRequest);
+        lenient().when(context.form()).thenReturn(loginFormsProvider);
+        lenient().when(loginFormsProvider.setAttribute(anyString(), any())).thenReturn(loginFormsProvider);
+        lenient().when(loginFormsProvider.createForm(anyString()))
+                .thenAnswer(inv -> Response.status(Response.Status.OK)
+                        .entity("template:" + inv.getArgument(0, String.class))
+                        .build());
 
         // Make sure default methods are available
         lenient().when(realm.getRequiredActionProviderByAlias(anyString()))
@@ -118,8 +127,8 @@ class MfaEnrollmentAuthenticatorTest {
 
         Response response = responseCaptor.getValue();
         assertEquals(200, response.getStatus());
-        String html = response.getEntity().toString();
-        assertTrue(html.contains("Your account needs additional multi-factor methods"));
+        assertEquals("template:mfa-enrollment.ftl", response.getEntity().toString());
+        verify(loginFormsProvider).createForm("mfa-enrollment.ftl");
     }
 
     @Test

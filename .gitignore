@@ -74,3 +74,4 @@ target/
 *.iml
 .vscode/
 .DS_Store
+.dev/keycloak-restart
