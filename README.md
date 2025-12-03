@@ -118,14 +118,11 @@ This repository currently contains the design and requirements for the authentic
 
 ## Continuous Integration & Releases
 
-GitLab CI/CD is configured in `.gitlab-ci.yml` to automatically:
-
-- run `mvn verify` for merge request and branch pipelines;
-- package the authenticator JAR and expose it as a job artifact;
-- publish a GitLab Release (with the compiled JAR attached) whenever a Git tag is pushed.
+- GitLab CI/CD (`.gitlab-ci.yml`) runs `mvn verify`, packages the provider, and on tags publishes a GitLab Release with the compiled JAR attached.
+- GitHub Actions (`.github/workflows/ci-release.yml`) mirrors the flow for GitHub-hosted repos: it verifies the build on pushes/PRs and, on tag pushes matching `v*`, uploads the packaged JAR and creates a GitHub Release with that artifact.
 
 To cut a release:
 
 1. Update the project version/notes as needed.
-2. Push a tag (for example `git tag -a v1.0.0 -m "v1.0.0"` followed by `git push origin v1.0.0`).
-3. GitLab will run the pipeline, build the JAR, upload it to project uploads, and create a Release named after the tag with a direct download link to the artifact.
+2. Create and push a tag (for example `git tag -a v1.0.0 -m "v1.0.0"` followed by `git push origin v1.0.0`).
+3. The respective CI platform will build, upload the artifact, and publish the release named after the tag with a direct download link to the JAR.
