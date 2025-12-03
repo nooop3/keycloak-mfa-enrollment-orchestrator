@@ -3,7 +3,6 @@ package com.github.nooop3;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.Authenticator;
 import org.keycloak.authentication.AuthenticationFlowError;
-import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.AuthenticationExecutionModel;
 import org.keycloak.models.AuthenticatorConfigModel;
 import org.keycloak.models.ClientModel;
@@ -417,30 +416,41 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
                 ? "You can add more MFA methods now for better recovery and flexibility."
                 : "Your account needs additional multi-factor methods before continuing.";
 
-        LoginFormsProvider form = context.form();
-        List<MethodView> methodViews = new ArrayList<>();
-        boolean hasSelectable = false;
-        for (MfaMethod method : enabledMethods) {
-            boolean configured = configuredMethods.contains(method.id());
-            boolean available = method.isAvailable(context.getRealm());
-            if (configured && config.hideAlreadyConfiguredMethods) {
-                continue;
-            }
-            if (!configured && available) {
-                hasSelectable = true;
-            }
-            methodViews.add(new MethodView(method.id(), method.label(), method.description(), configured, available));
-        }
+        List<MethodView> methodViews = enabledMethods.stream()
+                .filter(method -> shouldShowMethod(method, config, configuredMethods))
+                .map(method -> createMethodView(context, method, configuredMethods))
+                .toList();
 
-        form.setAttribute("title", title)
+        boolean hasSelectable = methodViews.stream()
+                .anyMatch(view -> !view.isConfigured() && view.isAvailable());
+
+        return context.form()
+                .setAttribute("title", title)
                 .setAttribute("description", description)
                 .setAttribute("message", message)
                 .setAttribute("mfaMethods", methodViews)
                 .setAttribute("allowOptOut", config.allowUserOptOut)
+                .setAttribute("optOutLabel", "Don't ask again")
                 .setAttribute("hasSelectable", hasSelectable)
-                .setAttribute("meetsMinimum", meetsMinimum);
+                .setAttribute("meetsMinimum", meetsMinimum)
+                .createForm("mfa-enrollment.ftl");
+    }
 
-        return form.createForm("mfa-enrollment.ftl");
+    private boolean shouldShowMethod(MfaMethod method, Config config, Set<String> configuredMethods) {
+        if (config.hideAlreadyConfiguredMethods && configuredMethods.contains(method.id())) {
+            return false;
+        }
+        if (RecoveryAuthnCodesCredentialModel.TYPE.equals(method.id())) {
+            return configuredMethods.contains(OTPCredentialModel.TYPE);
+        }
+        return true;
+    }
+
+    private MethodView createMethodView(AuthenticationFlowContext context, MfaMethod method,
+            Set<String> configuredMethods) {
+        boolean configured = configuredMethods.contains(method.id());
+        boolean available = method.isAvailable(context.getRealm());
+        return new MethodView(method.id(), method.label(), method.description(), configured, available);
     }
 
     private Response renderError(AuthenticationFlowContext context, String message) {
@@ -666,5 +676,4 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
             return new ValidationResult(false, List.of(), message);
         }
     }
-
 }
