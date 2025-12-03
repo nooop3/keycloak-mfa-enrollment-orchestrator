@@ -22,6 +22,8 @@ This directory contains a Docker Compose setup to test the MFA Enrollment Orches
    ```
 
    This will start Keycloak and automatically restart it when you rebuild the project.
+   - Use `docker compose watch --no-prefix` if you prefer slimmer logs in the same terminal.
+   - Alternatively, run `docker compose watch` in one terminal, and in another run `docker compose logs -f keycloak` to tail the server logs while the watcher handles restarts.
 
 3. Access Keycloak at <http://localhost:8080>
    - Admin Console: <http://localhost:8080/admin>
@@ -35,3 +37,11 @@ The `docker-compose.yaml` uses Docker Compose's built-in `watch` feature for aut
 - `../target` is bind-mounted into `/opt/keycloak/providers`, so the freshly built JAR is immediately visible to Keycloak.
 - A lightweight marker file at `.dev/keycloak-restart` is touched during the Maven `package` phase (and by `scripts/watch-mvn-package.sh`). The `develop.watch` entry monitors the `.dev` directory and, when the marker changes, syncs it into the container and restarts Keycloak.
 - Always use `docker compose watch` (or `docker compose up --watch`) while iterating so the restart automation stays active. Without watch mode, rebuilds still land in `/opt/keycloak/providers`, but you must restart Keycloak manually.
+
+### Persisting the Dev H2 Database
+
+The compose file also mounts `./data` (relative to this `deploy/` directory) into `/opt/keycloak/data`, which is where Keycloak stores its dev-mode H2 database files. This means:
+
+- The first time you run `docker compose watch`, the `deploy/data/` directory will be created automatically.
+- Realm changes (users, config, etc.) persist between container restarts because the embedded H2 database lives on your host filesystem.
+- To reset the environment, stop Keycloak and delete the `deploy/data/` directory before starting the watcher again.

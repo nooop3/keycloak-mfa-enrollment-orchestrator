@@ -75,3 +75,4 @@ target/
 .vscode/
 .DS_Store
 .dev/keycloak-restart
+deploy/data/
