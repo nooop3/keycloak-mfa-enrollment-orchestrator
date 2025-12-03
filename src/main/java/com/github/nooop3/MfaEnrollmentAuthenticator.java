@@ -14,7 +14,6 @@ import org.keycloak.credential.CredentialModel;
 import org.keycloak.models.credential.OTPCredentialModel;
 import org.keycloak.models.credential.RecoveryAuthnCodesCredentialModel;
 import org.keycloak.models.credential.WebAuthnCredentialModel;
-import org.keycloak.models.SubjectCredentialManager;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import java.time.Duration;
@@ -28,17 +27,16 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 public class MfaEnrollmentAuthenticator implements Authenticator {
 
     private static final String ATTR_LAST_PROMPT = "mfaEnrollment.lastPrompt";
     private static final String ATTR_FIRST_LOGIN_COMPLETED = "mfaEnrollment.firstLoginCompleted";
     private static final int DEFAULT_MIN_REQUIRED = 1;
-    private static final String WEBAUTHN_PASSWORDLESS_TYPE = "webauthn-passwordless";
     private static final List<String> DEFAULT_ENABLED_TYPES = List.of(
             OTPCredentialModel.TYPE,
             WebAuthnCredentialModel.TYPE_TWOFACTOR,
-            WEBAUTHN_PASSWORDLESS_TYPE,
             RecoveryAuthnCodesCredentialModel.TYPE);
 
     @Override
@@ -314,22 +312,15 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
     }
 
     private Set<String> resolveConfiguredMethods(KeycloakSession session, RealmModel realm, UserModel user) {
-        Set<String> configured = new HashSet<>();
-        SubjectCredentialManager credentialManager = user.credentialManager();
-        credentialManager.getStoredCredentialsStream()
+        Set<String> supportedTypes = Set.of(
+                OTPCredentialModel.TYPE,
+                WebAuthnCredentialModel.TYPE_TWOFACTOR,
+                RecoveryAuthnCodesCredentialModel.TYPE);
+        return user.credentialManager()
+                .getStoredCredentialsStream()
                 .map(CredentialModel::getType)
-                .forEach(type -> {
-                    if (OTPCredentialModel.TYPE.equals(type)) {
-                        configured.add(OTPCredentialModel.TYPE);
-                    } else if (WebAuthnCredentialModel.TYPE_TWOFACTOR.equals(type)) {
-                        configured.add(WebAuthnCredentialModel.TYPE_TWOFACTOR);
-                    } else if (WEBAUTHN_PASSWORDLESS_TYPE.equals(type)) {
-                        configured.add(WEBAUTHN_PASSWORDLESS_TYPE);
-                    } else if (RecoveryAuthnCodesCredentialModel.TYPE.equals(type)) {
-                        configured.add(RecoveryAuthnCodesCredentialModel.TYPE);
-                    }
-                });
-        return configured;
+                .filter(supportedTypes::contains)
+                .collect(Collectors.toSet());
     }
 
     private List<MfaMethod> resolveEnabledMethods(Config config, RealmModel realm) {
@@ -359,9 +350,6 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         methods.add(new MfaMethod(WebAuthnCredentialModel.TYPE_TWOFACTOR, "Security key / WebAuthn",
                 "Register a WebAuthn security key.", WebAuthnCredentialModel.TYPE_TWOFACTOR,
                 List.of("webauthn-register")));
-        methods.add(new MfaMethod(WEBAUTHN_PASSWORDLESS_TYPE, "Passkey (passwordless)",
-                "Register a passkey for passwordless login.", WEBAUTHN_PASSWORDLESS_TYPE,
-                List.of("webauthn-register-passwordless")));
         methods.add(new MfaMethod(RecoveryAuthnCodesCredentialModel.TYPE, "Recovery codes",
                 "Generate one-time recovery codes.", RecoveryAuthnCodesCredentialModel.TYPE,
                 List.of("CONFIGURE_RECOVERY_AUTHN_CODES")));
@@ -684,7 +672,6 @@ public class MfaEnrollmentAuthenticator implements Authenticator {
         }
         return switch (id) {
             case "totp" -> OTPCredentialModel.TYPE;
-            case "webauthn_passwordless" -> WEBAUTHN_PASSWORDLESS_TYPE;
             case "recovery_codes" -> RecoveryAuthnCodesCredentialModel.TYPE;
             default -> id;
         };

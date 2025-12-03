@@ -77,7 +77,6 @@ These options define which methods the **user can see and select**.
   Possible values map directly to Keycloak credential type identifiers:
   - `otp` – Time-based OTP (built-in `CONFIGURE_TOTP`).
   - `webauthn` – WebAuthn security key (username + password + WebAuthn).
-  - `webauthn-passwordless` – WebAuthn passkeys / passwordless.
   - `recovery-authn-code` – Recovery authentication codes.
 
   The provider will:
@@ -249,7 +248,7 @@ These options let admins fine-tune **who** is targeted.
 ### A. Strict Rollout: Enforce at Least One MFA, No Opt-Out
 
 - `min_required_mfa_methods = 1`
-- `enabled_mfa_types = [otp, webauthn, webauthn-passwordless, recovery-authn-code]`
+- `enabled_mfa_types = [otp, webauthn, recovery-authn-code]`
 - `selection_mode = at_least_one`
 - `fail_if_selection_insufficient = true`
 - `allow_user_opt_out = false`
@@ -280,7 +279,7 @@ Users who already have basic MFA might occasionally be asked to add WebAuthn or 
 ### C. Security-Sensitive Clients Only
 
 - `min_required_mfa_methods = 2`
-- `enabled_mfa_types = [otp, webauthn, webauthn-passwordless]`
+- `enabled_mfa_types = [otp, webauthn]`
 - `selection_mode = at_least_one`
 - `only_for_clients = [ "admin-portal", "prod-dashboard" ]`
 - `only_for_roles = [ "admin", "ops" ]`
